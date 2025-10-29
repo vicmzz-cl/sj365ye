@@ -1,14 +1,485 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo da Memória</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Flagle Inspirado</title>
+  <style>
+    :root {
+      --bg: #0f1420;
+      --panel: #121a2b;
+      --accent: #3aa1ff;
+      --text: #e8eef7;
+      --muted: #97a5bd;
+      --good: #35c46a;
+      --bad: #ff6363;
+      --tile: #1a243a;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px at 60% -20%, #183053, var(--bg));
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      display: grid;
+      place-items: center;
+    }
+    .app {
+      width: min(1000px, 92vw);
+      padding: 24px;
+    }
+    header {
+      display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px;
+    }
+    header h1 {
+      font-size: 28px; margin: 0; letter-spacing: 0.4px;
+      background: linear-gradient(90deg, #fff 0%, #a7c8ff 50%, #fff 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    header small { color: var(--muted); }
+    .grid-wrap {
+      display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start;
+    }
+    .panel {
+      background: linear-gradient(180deg, #121a2b 0%, #0f1627 100%);
+      border: 1px solid #1e2a44; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      padding: 16px;
+    }
+    canvas {
+      width: 100%; height: auto; background: #0c1120; border-radius: 12px; border: 1px solid #1b2944;
+      image-rendering: pixelated;
+    }
+    .legend { color: var(--muted); font-size: 14px; margin-top: 10px; }
+    .controls { display: grid; gap: 12px; }
+    select, button, input[type="text"] {
+      background: #0f1627; color: var(--text); border: 1px solid #273a63; border-radius: 10px;
+      padding: 10px 12px; font-size: 15px; outline: none;
+    }
+    button {
+      background: linear-gradient(180deg, #2376ff 0%, #1a58c7 100%); border: none;
+      cursor: pointer; transition: transform .06s ease, box-shadow .2s ease;
+      box-shadow: 0 6px 18px rgba(58,161,255,.35);
+    }
+    button:active { transform: translateY(1px); }
+    .guess-list { display: grid; gap: 8px; margin-top: 10px; }
+    .guess-item {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      padding: 8px 10px; background: #0d1526; border: 1px solid #223356; border-radius: 10px;
+      font-size: 14px;
+    }
+    .pill {
+      padding: 4px 8px; border-radius: 999px; font-size: 12px; border: 1px solid #294474; color: var(--muted);
+    }
+    .status { margin-top: 10px; font-weight: 600; }
+    .status.win { color: var(--good); }
+    .status.lose { color: var(--bad); }
+    .footer { margin-top: 18px; font-size: 13px; color: var(--muted); }
+    .tile-reveal {
+      display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin-top: 12px;
+    }
+    .tile-reveal div {
+      aspect-ratio: 1; background: var(--tile); border-radius: 6px; border: 1px solid #1f2d4a;
+      position: relative; overflow: hidden;
+    }
+    .tile-reveal div.revealed { outline: 2px solid #2b7cff55; }
+    .help { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    .actions { display: flex; gap: 8px; margin-top: 6px; }
+  </style>
 </head>
 <body>
-    <h1>Jogo da Memória</h1>
-    <div id="game-board"></div>
-    <script src="script.js"></script>
+  <div class="app">
+    <header>
+      <h1>Flagle Inspirado</h1>
+      <small>Adivinhe a bandeira em até 6 tentativas</small>
+    </header>
+
+    <div class="grid-wrap">
+      <div class="panel">
+        <canvas id="targetCanvas" width="480" height="288" aria-label="Bandeira alvo ocultada"></canvas>
+        <div class="legend">
+          Tiles revelados após cada palpite são aqueles com alta similaridade entre a bandeira escolhida e a bandeira secreta.
+        </div>
+        <div id="tiles" class="tile-reveal" aria-label="Tiles de revelação"></div>
+      </div>
+
+      <div class="panel">
+        <div class="controls">
+          <label for="countrySelect">Selecione sua tentativa:</label>
+          <select id="countrySelect"></select>
+          <div class="actions">
+            <button id="guessBtn">Palpitar</button>
+            <button id="newBtn" title="Nova partida">Nova</button>
+            <button id="hintBtn" title="Revelar um bloco aleatório">Dica</button>
+          </div>
+          <div id="status" class="status">Escolha uma bandeira para começar.</div>
+          <div id="help" class="help">
+            Como jogar: descubra a bandeira oculta em seis palpites. Após cada tentativa, pixels onde as imagens coincidem são revelados. Todas as bandeiras são redimensionadas na mesma proporção para comparação justa.
+          </div>
+
+          <div class="guess-list" id="guessList"></div>
+          <div class="footer">Banco inicial com 6 países (exemplo). Adicione mais no array FLAGS.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/**
+ * Bandeiras em SVG embutidas (simplificadas) e metadata.
+ * Para ampliar, adicione novos objetos com { id, name, svg }.
+ */
+const FLAGS = [
+  {
+    id: "br",
+    name: "Brasil",
+    // Simples representação do Brasil (não oficial, estilizada para demo)
+    svg: `
+    <svg xmlns="http://www.w3.org/2000/svg" width="960" height="576" viewBox="0 0 960 576">
+      <rect width="960" height="576" fill="#009b3a"/>
+      <polygon points="480,96 816,288 480,480 144,288" fill="#ffdf00"/>
+      <circle cx="480" cy="288" r="110" fill="#002776"/>
+      <rect x="370" y="275" width="220" height="26" fill="#fff" transform="rotate(-12 480 288)" opacity="0.9"/>
+    </svg>`
+  },
+  {
+    id: "jp",
+    name: "Japão",
+    svg: `
+    <svg xmlns="http://www.w3.org/2000/svg" width="960" height="576" viewBox="0 0 960 576">
+      <rect width="960" height="576" fill="#fff"/>
+      <circle cx="480" cy="288" r="140" fill="#bc002d"/>
+    </svg>`
+  },
+  {
+    id: "de",
+    name: "Alemanha",
+    svg: `
+    <svg xmlns="http://www.w3.org/2000/svg" width="960" height="576" viewBox="0 0 960 576">
+      <rect width="960" height="576" fill="#000"/>
+      <rect y="192" width="960" height="192" fill="#dd0000"/>
+      <rect y="384" width="960" height="192" fill="#ffce00"/>
+    </svg>`
+  },
+  {
+    id: "fr",
+    name: "França",
+    svg: `
+    <svg xmlns="http://www.w3.org/2000/svg" width="960" height="576" viewBox="0 0 960 576">
+      <rect width="960" height="576" fill="#fff"/>
+      <rect width="320" height="576" x="0" fill="#0055a4"/>
+      <rect width="320" height="576" x="640" fill="#ef4135"/>
+    </svg>`
+  },
+  {
+    id: "sn",
+    name: "Senegal",
+    svg: `
+    <svg xmlns="http://www.w3.org/2000/svg" width="960" height="576" viewBox="0 0 960 576">
+      <rect width="320" height="576" x="0" fill="#00853f"/>
+      <rect width="320" height="576" x="320" fill="#fdef42"/>
+      <rect width="320" height="576" x="640" fill="#e31b23"/>
+      <polygon points="480,220 496,272 552,272 506,304 522,356 480,324 438,356 454,304 408,272 464,272"
+              fill="#00853f"/>
+    </svg>`
+  },
+  {
+    id: "ca",
+    name: "Canadá",
+    svg: `
+    <svg xmlns="http://www.w3.org/2000/svg" width="960" height="576" viewBox="0 0 960 576">
+      <rect width="240" height="576" x="0" fill="#d52b1e"/>
+      <rect width="480" height="576" x="240" fill="#fff"/>
+      <rect width="240" height="576" x="720" fill="#d52b1e"/>
+      <polygon points="480,160 500,240 560,240 510,280 530,360 480,320 430,360 450,280 400,240 460,240"
+              fill="#d52b1e"/>
+    </svg>`
+  }
+];
+
+/**
+ * Configuração do tabuleiro de comparação
+ */
+const BOARD = {
+  canvasW: 480,   // proporcional ao viewBox dos SVGs
+  canvasH: 288,   // 960x576 reduzido pela metade
+  tilesX: 10,
+  tilesY: 6,
+  threshold: 45   // distância de cor máxima (0–441 aprox para RGB) para considerar similar
+};
+
+const state = {
+  target: null,        // objeto da bandeira alvo
+  guesses: [],         // array de { id, name, score, revealedTilesCount }
+  revealMask: new Array(BOARD.tilesX * BOARD.tilesY).fill(false),
+  attemptsLeft: 6
+};
+
+const els = {
+  canvas: document.getElementById('targetCanvas'),
+  select: document.getElementById('countrySelect'),
+  guessBtn: document.getElementById('guessBtn'),
+  newBtn: document.getElementById('newBtn'),
+  hintBtn: document.getElementById('hintBtn'),
+  status: document.getElementById('status'),
+  guessList: document.getElementById('guessList'),
+  tiles: document.getElementById('tiles'),
+  help: document.getElementById('help')
+};
+
+const ctx = els.canvas.getContext('2d');
+const offscreen = document.createElement('canvas');
+offscreen.width = BOARD.canvasW;
+offscreen.height = BOARD.canvasH;
+const offctx = offscreen.getContext('2d');
+
+// Util: converte SVG string em Image via data URL
+function svgToImage(svg) {
+  const img = new Image();
+  img.decoding = 'async';
+  img.crossOrigin = 'anonymous';
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg.trim());
+  return new Promise((resolve, reject) => {
+    img.onload = () => resolve(img);
+    img.onerror = (e) => reject(e);
+  });
+}
+
+// Util: distancia euclidiana de cores
+function colorDist(a, b) {
+  const dr = a[0] - b[0];
+  const dg = a[1] - b[1];
+  const db = a[2] - b[2];
+  return Math.sqrt(dr*dr + dg*dg + db*db);
+}
+
+// Render: desenha SVG redimensionado no canvas alvo
+async function drawFlagToCanvas(flag, targetCtx) {
+  targetCtx.clearRect(0, 0, BOARD.canvasW, BOARD.canvasH);
+  const img = await svgToImage(flag.svg);
+  // Centraliza preservando proporção (todas possuem 960x576 viewBox)
+  const baseW = 960, baseH = 576;
+  const scale = Math.min(BOARD.canvasW/baseW, BOARD.canvasH/baseH);
+  const dw = baseW * scale;
+  const dh = baseH * scale;
+  const dx = (BOARD.canvasW - dw)/2;
+  const dy = (BOARD.canvasH - dh)/2;
+  targetCtx.drawImage(img, dx, dy, dw, dh);
+}
+
+// Inicializa seletor
+function initSelect() {
+  els.select.innerHTML = '';
+  FLAGS.sort((a,b) => a.name.localeCompare(b.name))
+       .forEach(f => {
+         const opt = document.createElement('option');
+         opt.value = f.id; opt.textContent = f.name;
+         els.select.appendChild(opt);
+       });
+}
+
+// Inicializa tiles UI
+function initTilesUI() {
+  els.tiles.innerHTML = '';
+  for (let i=0; i<BOARD.tilesX * BOARD.tilesY; i++) {
+    const div = document.createElement('div');
+    div.dataset.idx = i;
+    els.tiles.appendChild(div);
+  }
+  applyTilesReveal();
+}
+
+// Atualiza estilo dos tiles
+function applyTilesReveal() {
+  const nodes = els.tiles.children;
+  for (let i=0; i<nodes.length; i++) {
+    nodes[i].classList.toggle('revealed', !!state.revealMask[i]);
+  }
+}
+
+// Constrói máscara de revelação baseada na similaridade por tile
+function revealBySimilarity(guessFlag) {
+  // Desenha alvo no offscreen A e palpite no offscreen B
+  const bufA = document.createElement('canvas');
+  bufA.width = BOARD.canvasW; bufA.height = BOARD.canvasH;
+  const aCtx = bufA.getContext('2d');
+
+  const bufB = document.createElement('canvas');
+  bufB.width = BOARD.canvasW; bufB.height = BOARD.canvasH;
+  const bCtx = bufB.getContext('2d');
+
+  return Promise.all([
+    drawFlagToCanvas(state.target, aCtx),
+    drawFlagToCanvas(guessFlag, bCtx)
+  ]).then(() => {
+    // Para cada tile, calcula média de distância
+    const tileW = Math.floor(BOARD.canvasW / BOARD.tilesX);
+    const tileH = Math.floor(BOARD.canvasH / BOARD.tilesY);
+    let revealedCount = 0;
+    for (let ty=0; ty<BOARD.tilesY; ty++) {
+      for (let tx=0; tx<BOARD.tilesX; tx++) {
+        const idx = ty*BOARD.tilesX + tx;
+        if (state.revealMask[idx]) continue;
+        const x = tx*tileW, y = ty*tileH;
+        const w = tileW, h = tileH;
+        const imgA = aCtx.getImageData(x, y, w, h).data;
+        const imgB = bCtx.getImageData(x, y, w, h).data;
+        // sample em grade 6x6 para performance
+        const sx = 6, sy = 6;
+        let total = 0, samples = 0;
+        for (let iy=0; iy<sy; iy++) {
+          for (let ix=0; ix<sx; ix++) {
+            const px = Math.floor(ix * (w/(sx-1)));
+            const py = Math.floor(iy * (h/(sy-1)));
+            const iA = ((py*w)+px)*4;
+            const iB = ((py*w)+px)*4;
+            const a = [imgA[iA], imgA[iA+1], imgA[iA+2]];
+            const b = [imgB[iB], imgB[iB+1], imgB[iB+2]];
+            total += colorDist(a, b);
+            samples++;
+          }
+        }
+        const avg = total / samples;
+        if (avg <= BOARD.threshold) {
+          state.revealMask[idx] = true;
+          revealedCount++;
+        }
+      }
+    }
+    return revealedCount;
+  });
+}
+
+// Calcula “score” simples: percentual de tiles revelados
+function calcScore() {
+  const total = BOARD.tilesX * BOARD.tilesY;
+  const revealed = state.revealMask.filter(Boolean).length;
+  return Math.round((revealed / total) * 100);
+}
+
+// Renderiza lista de palpites
+function renderGuesses() {
+  els.guessList.innerHTML = '';
+  state.guesses.forEach((g, i) => {
+    const row = document.createElement('div');
+    row.className = 'guess-item';
+    row.innerHTML = `
+      <div><strong>Tentativa ${i+1}:</strong> ${g.name}</div>
+      <div class="pill">Revelados: ${g.revealedTilesCount}</div>
+      <div class="pill">Progresso: ${g.score}%</div>
+    `;
+    els.guessList.appendChild(row);
+  });
+}
+
+// Mostra alvo oculto com dithering/blur leve
+async function renderTargetObscured() {
+  await drawFlagToCanvas(state.target, ctx);
+  // aplica ocultamento: grade de quadrados escuros, preservando apenas tiles revelados
+  const tileW = Math.floor(BOARD.canvasW / BOARD.tilesX);
+  const tileH = Math.floor(BOARD.canvasH / BOARD.tilesY);
+  ctx.save();
+  for (let ty=0; ty<BOARD.tilesY; ty++) {
+    for (let tx=0; tx<BOARD.tilesX; tx++) {
+      const idx = ty*BOARD.tilesX + tx;
+      const x = tx*tileW, y = ty*tileH;
+      if (!state.revealMask[idx]) {
+        ctx.fillStyle = 'rgba(10,15,30,0.95)';
+        ctx.fillRect(x, y, tileW, tileH);
+        ctx.strokeStyle = 'rgba(40,60,100,0.5)';
+        ctx.strokeRect(x+0.5, y+0.5, tileW-1, tileH-1);
+      } else {
+        // realça tile revelado
+        ctx.strokeStyle = 'rgba(43,124,255,0.35)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x+1, y+1, tileW-2, tileH-2);
+      }
+    }
+  }
+  ctx.restore();
+}
+
+// Checa vitória/derrota
+function checkEnd(guessFlag) {
+  const guessedRight = guessFlag.id === state.target.id;
+  const allRevealed = state.revealMask.every(Boolean);
+  if (guessedRight) {
+    els.status.textContent = `Você acertou! A solução é ${state.target.name}.`;
+    els.status.className = 'status win';
+    return true;
+  }
+  if (state.attemptsLeft <= 0) {
+    els.status.textContent = `Fim de jogo. A solução era ${state.target.name}.`;
+    els.status.className = 'status lose';
+    return true;
+  }
+  if (allRevealed) {
+    els.status.textContent = `Todos os tiles foram revelados. A solução é ${state.target.name}.`;
+    els.status.className = 'status win';
+    return true;
+  }
+  return false;
+}
+
+// Nova partida
+async function newGame() {
+  state.target = FLAGS[Math.floor(Math.random() * FLAGS.length)];
+  state.guesses = [];
+  state.revealMask = new Array(BOARD.tilesX * BOARD.tilesY).fill(false);
+  state.attemptsLeft = 6;
+  els.status.textContent = 'Nova partida! Faça seu primeiro palpite.';
+  els.status.className = 'status';
+  initTilesUI();
+  await renderTargetObscured();
+  renderGuesses();
+}
+
+// Palpite
+async function makeGuess() {
+  if (state.attemptsLeft <= 0) return;
+  const id = els.select.value;
+  const guessFlag = FLAGS.find(f => f.id === id);
+  if (!guessFlag) return;
+
+  const revealedTilesCount = await revealBySimilarity(guessFlag);
+  state.attemptsLeft--;
+  const score = calcScore();
+  state.guesses.push({
+    id: guessFlag.id,
+    name: guessFlag.name,
+    revealedTilesCount,
+    score
+  });
+
+  await renderTargetObscured();
+  renderGuesses();
+
+  const ended = checkEnd(guessFlag);
+  if (!ended) {
+    els.status.textContent = `Tentativas restantes: ${state.attemptsLeft} • Progresso: ${score}%`;
+    els.status.className = 'status';
+  }
+}
+
+// Dica: revela um tile aleatório ainda oculto
+function revealRandomTile() {
+  const hidden = [];
+  for (let i=0; i<state.revealMask.length; i++) if (!state.revealMask[i]) hidden.push(i);
+  if (!hidden.length) return;
+  const pick = hidden[Math.floor(Math.random() * hidden.length)];
+  state.revealMask[pick] = true;
+  applyTilesReveal();
+  renderTargetObscured();
+  els.status.textContent = `Dica usada. Tiles revelados: ${state.revealMask.filter(Boolean).length}.`;
+}
+
+// Eventos
+els.guessBtn.addEventListener('click', makeGuess);
+els.newBtn.addEventListener('click', newGame);
+els.hintBtn.addEventListener('click', revealRandomTile);
+
+// Boot
+initSelect();
+newGame();
+</script>
 </body>
 </html>
