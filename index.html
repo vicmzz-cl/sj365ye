@@ -56,7 +56,7 @@
 </style>
 </head>
 <body>
-<h1>🌍 Jogo das Bandeiras</h1>
+<h1>🌍 Adivinhe a Bandeira 🌍</h1>
 
 <div id="flag"></div>
 
@@ -87,9 +87,9 @@ const countries = [
   {"name":"Áustria","flag":"https://flagcdn.com/w320/at.png"},
   {"name":"Azerbaijão","flag":"https://flagcdn.com/w320/az.png"},
   {"name":"Bahamas","flag":"https://flagcdn.com/w320/bs.png"},
+  {"name":"Bahrein","flag":"https://flagcdn.com/w320/bh.png"},
   {"name":"Bangladesh","flag":"https://flagcdn.com/w320/bd.png"},
   {"name":"Barbados","flag":"https://flagcdn.com/w320/bb.png"},
-  {"name":"Barém","flag":"https://flagcdn.com/w320/bh.png"},
   {"name":"Bélgica","flag":"https://flagcdn.com/w320/be.png"},
   {"name":"Belize","flag":"https://flagcdn.com/w320/bz.png"},
   {"name":"Benim","flag":"https://flagcdn.com/w320/bj.png"},
@@ -132,9 +132,9 @@ const countries = [
   {"name":"Eslováquia","flag":"https://flagcdn.com/w320/sk.png"},
   {"name":"Eslovênia","flag":"https://flagcdn.com/w320/si.png"},
   {"name":"Espanha","flag":"https://flagcdn.com/w320/es.png"},
+  {"name":"Essuatíni","flag":"https://flagcdn.com/w320/sz.png"},
   {"name":"Estados Unidos","flag":"https://flagcdn.com/w320/us.png"},
   {"name":"Estônia","flag":"https://flagcdn.com/w320/ee.png"},
-  {"name":"Eswatini","flag":"https://flagcdn.com/w320/sz.png"},
   {"name":"Etiópia","flag":"https://flagcdn.com/w320/et.png"},
   {"name":"Fiji","flag":"https://flagcdn.com/w320/fj.png"},
   {"name":"Filipinas","flag":"https://flagcdn.com/w320/ph.png"},
@@ -152,11 +152,9 @@ const countries = [
   {"name":"Guiné-Bissau","flag":"https://flagcdn.com/w320/gw.png"},
   {"name":"Guiné Equatorial","flag":"https://flagcdn.com/w320/gq.png"},
   {"name":"Haiti","flag":"https://flagcdn.com/w320/ht.png"},
-  {"name":"Holanda","flag":"https://flagcdn.com/w320/nl.png"},
   {"name":"Honduras","flag":"https://flagcdn.com/w320/hn.png"},
   {"name":"Hungria","flag":"https://flagcdn.com/w320/hu.png"},
   {"name":"Iémen","flag":"https://flagcdn.com/w320/ye.png"},
-  {"name":"Ilhas Maldivas","flag":"https://flagcdn.com/w320/mv.png"},
   {"name":"Ilhas Marshall","flag":"https://flagcdn.com/w320/mh.png"},
   {"name":"Ilhas Salomão","flag":"https://flagcdn.com/w320/sb.png"},
   {"name":"Índia","flag":"https://flagcdn.com/w320/in.png"},
@@ -171,6 +169,7 @@ const countries = [
   {"name":"Japão","flag":"https://flagcdn.com/w320/jp.png"},
   {"name":"Jordânia","flag":"https://flagcdn.com/w320/jo.png"},
   {"name":"Kiribati","flag":"https://flagcdn.com/w320/ki.png"},
+  {"name":"Kosovo","flag":"https://flagcdn.com/w320/xk.png"},
   {"name":"Kuwait","flag":"https://flagcdn.com/w320/kw.png"},
   {"name":"Laos","flag":"https://flagcdn.com/w320/la.png"},
   {"name":"Lesoto","flag":"https://flagcdn.com/w320/ls.png"},
@@ -184,20 +183,21 @@ const countries = [
   {"name":"Macedônia do Norte","flag":"https://flagcdn.com/w320/mk.png"},
   {"name":"Madagascar","flag":"https://flagcdn.com/w320/mg.png"},
   {"name":"Malásia","flag":"https://flagcdn.com/w320/my.png"},
-  {"name":"Malaui","flag":"https://flagcdn.com/w320/mw.png"},
+  {"name":"Malawi","flag":"https://flagcdn.com/w320/mw.png"},
+  {"name":"Maldivas","flag":"https://flagcdn.com/w320/mv.png"},
   {"name":"Mali","flag":"https://flagcdn.com/w320/ml.png"},
   {"name":"Malta","flag":"https://flagcdn.com/w320/mt.png"},
   {"name":"Marrocos","flag":"https://flagcdn.com/w320/ma.png"},
   {"name":"Maurício","flag":"https://flagcdn.com/w320/mu.png"},
   {"name":"Mauritânia","flag":"https://flagcdn.com/w320/mr.png"},
   {"name":"México","flag":"https://flagcdn.com/w320/mx.png"},
-  {"name":"Mianmar","flag":"https://flagcdn.com/w320/mm.png"},
   {"name":"Micronésia","flag":"https://flagcdn.com/w320/fm.png"},
   {"name":"Moçambique","flag":"https://flagcdn.com/w320/mz.png"},
   {"name":"Moldávia","flag":"https://flagcdn.com/w320/md.png"},
   {"name":"Mônaco","flag":"https://flagcdn.com/w320/mc.png"},
   {"name":"Mongólia","flag":"https://flagcdn.com/w320/mn.png"},
   {"name":"Montenegro","flag":"https://flagcdn.com/w320/me.png"},
+  {"name":"Myanmar","flag":"https://flagcdn.com/w320/mm.png"},
   {"name":"Namíbia","flag":"https://flagcdn.com/w320/na.png"},
   {"name":"Nauru","flag":"https://flagcdn.com/w320/nr.png"},
   {"name":"Nepal","flag":"https://flagcdn.com/w320/np.png"},
@@ -209,6 +209,7 @@ const countries = [
   {"name":"Omã","flag":"https://flagcdn.com/w320/om.png"},
   {"name":"Países Baixos","flag":"https://flagcdn.com/w320/nl.png"},
   {"name":"Palau","flag":"https://flagcdn.com/w320/pw.png"},
+  {"name":"Palestina","flag":"https://flagcdn.com/w320/ps.png"},
   {"name":"Panamá","flag":"https://flagcdn.com/w320/pa.png"},
   {"name":"Papua-Nova Guiné","flag":"https://flagcdn.com/w320/pg.png"},
   {"name":"Paquistão","flag":"https://flagcdn.com/w320/pk.png"},
@@ -222,7 +223,6 @@ const countries = [
   {"name":"República Centro-Africana","flag":"https://flagcdn.com/w320/cf.png"},
   {"name":"República Democrática do Congo","flag":"https://flagcdn.com/w320/cd.png"},
   {"name":"República Dominicana","flag":"https://flagcdn.com/w320/do.png"},
-  {"name":"República Tcheca","flag":"https://flagcdn.com/w320/cz.png"},
   {"name":"Romênia","flag":"https://flagcdn.com/w320/ro.png"},
   {"name":"Ruanda","flag":"https://flagcdn.com/w320/rw.png"},
   {"name":"Rússia","flag":"https://flagcdn.com/w320/ru.png"},
@@ -232,10 +232,10 @@ const countries = [
   {"name":"São Cristóvão e Névis","flag":"https://flagcdn.com/w320/kn.png"},
   {"name":"São Tomé e Príncipe","flag":"https://flagcdn.com/w320/st.png"},
   {"name":"São Vicente e Granadinas","flag":"https://flagcdn.com/w320/vc.png"},
-  {"name":"Seicheles","flag":"https://flagcdn.com/w320/sc.png"},
   {"name":"Senegal","flag":"https://flagcdn.com/w320/sn.png"},
   {"name":"Serra Leoa","flag":"https://flagcdn.com/w320/sl.png"},
   {"name":"Sérvia","flag":"https://flagcdn.com/w320/rs.png"},
+  {"name":"Seychelles","flag":"https://flagcdn.com/w320/sc.png"},
   {"name":"Singapura","flag":"https://flagcdn.com/w320/sg.png"},
   {"name":"Síria","flag":"https://flagcdn.com/w320/sy.png"},
   {"name":"Somália","flag":"https://flagcdn.com/w320/so.png"},
@@ -249,6 +249,7 @@ const countries = [
   {"name":"Taiwan","flag":"https://flagcdn.com/w320/tw.png"},
   {"name":"Tajiquistão","flag":"https://flagcdn.com/w320/tj.png"},
   {"name":"Tanzânia","flag":"https://flagcdn.com/w320/tz.png"},
+  {"name":"Tchéquia","flag":"https://flagcdn.com/w320/cz.png"},
   {"name":"Timor-Leste","flag":"https://flagcdn.com/w320/tl.png"},
   {"name":"Togo","flag":"https://flagcdn.com/w320/tg.png"},
   {"name":"Tonga","flag":"https://flagcdn.com/w320/to.png"},
@@ -325,7 +326,7 @@ function makeGuess() {
   revealPart();
 
   if (attempts <= 0) {
-    document.getElementById("result").innerHTML = `❌ Você perdeu! Era ${secret.name}.`;
+    document.getElementById("result").innerHTML = `❌ Você perdeu! A resposta era ${secret.name}.`;
     revealAll();
     disableInput();
   }
